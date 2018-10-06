@@ -1,0 +1,22 @@
+Report for integral.c
+
+Out algorithm:
+
+Before trying to parallelize our program from the beginning, we decided to write it sequentially so we could compare the result between sequential and parallel.
+
+The idea of our algorithm is a bit the same as pi.c:
+
+First of all, we need a variable sum to all f(x), we need a random generator. Since the random  variable g is between 0 and 1, we need to map it with the interval [a, b]: the computation is: x = a* (1-g) + g * b, where x is the random number in the interval [a, b]. We found this formula from another course: Computer graphics. We can easily see that it is the correct formula since if g = 0, x = a and if g = 1, x = b. 
+
+To compute the integral, we need the formula given in the A1.pdf: 
+
+integral = (1/samples) * ( SUM from 1 to samples f(xi) * (b-a)), where xi is the ith generated random number, f() is the function we want to compute the integral, samples is the number of generated random number we want.
+
+To implement this formula. we just need to create a random generator. Then, using a for loop, we generate a random variable, we compute the random number, then we sum for the formula. At the end of the for loop, we just divide by the number of samples. 
+
+
+To parallelise the program, we decided to implement it a bit as pi.c:
+we create a random number generator per thread that we store in an array. the following explanations are the same as pi.c since we encounter the same problem: 
+"We considered parallelising the for loop [...................] can generate another point".
+
+TOADD: first we wanted to parallelise only the for loop, but we realised that some problem could happen: if we generate only one random generator and each thread uses it to generate a random variable, then we could have 2 threads that would use the same random variable. So our computation of the integral wouldnt be correct.

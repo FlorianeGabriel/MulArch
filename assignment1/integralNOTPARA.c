@@ -41,25 +41,13 @@ int main (int argc, const char *argv[]) {
 
 double integrate (int num_threads, int samples, int a, int b, double (*f)(double)) {
     double integral;
+        
     double sum = 0;
-
-	omp_set_num_threads(num_threads);
-
-    rand_gen gen[num_threads];
-    
-    /*We thought about parallelising this loop but then thought it was not necessary as we don't have that many threads*/
-    for(int i = 0; i < num_threads; i++){
-		gen[i] = init_rand();
-    }
-   
-    #pragma omp parallel for
+    rand_gen gen = init_rand();
     
     for(int i = 0; i < samples; i++){
-		int id = omp_get_thread_num();
-
-		double g = next_rand(gen[id]);
+		double g = next_rand(gen);
 		double x = a*(1-g) + g*b;
-		#pragma omp atomic
 		sum += f(x)*(b-a);
 
 	}

@@ -36,21 +36,16 @@ int main (int argc, const char *argv[]) {
 
 double calculate_pi (int num_threads, int samples) {
     double pi;
-	
+	double sum = 0;
+
 	omp_set_num_threads(num_threads);
-	
-    /* Your code goes here */
-    
-    double sum = 0;
-    
-    
+	        
     rand_gen gen[num_threads];
     
     /*We thought about parallelising this loop but then thought it was not necessary as we don't have that many threads*/
     for(int i = 0; i < num_threads; i++){
 		gen[i] = init_rand();
    }
-    
    
     #pragma omp parallel for
     for(int i = 0 ; i < samples; i++){
@@ -58,11 +53,9 @@ double calculate_pi (int num_threads, int samples) {
 		double x = next_rand(gen[id]);
 		double y = next_rand(gen[id]);
 		if(x*x + y*y <= 1) {
-			
 			#pragma omp atomic
 			sum++;
 		}
-		
 	}
 	
 	pi = 4 * sum / samples;
