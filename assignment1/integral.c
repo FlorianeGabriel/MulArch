@@ -1,8 +1,8 @@
 /*
 ============================================================================
 Filename    : integral.c
-Author      : Your names goes here
-SCIPER		: Your SCIPER numbers
+Author      : Floriane Gabriel and Julien von Felten
+SCIPER		: 248112 and 234865
 ============================================================================
 */
 
