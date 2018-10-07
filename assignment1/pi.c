@@ -36,29 +36,35 @@ int main (int argc, const char *argv[]) {
 
 double calculate_pi (int num_threads, int samples) {
     double pi;
-	double sum = 0;
+	int sum = 0;
 
 	omp_set_num_threads(num_threads);
-	        
-    rand_gen gen[num_threads];
-    
-    /*We thought about parallelising this loop but then thought it was not necessary as we don't have that many threads*/
-    for(int i = 0; i < num_threads; i++){
-		gen[i] = init_rand();
-   }
-   
-    #pragma omp parallel for
-    for(int i = 0 ; i < samples; i++){
+	//the minimum to do for each thread
+	int splitSamples = samples / num_threads;
+	
+    #pragma omp parallel
+    {
+		//since the division samples / num_threads isnt a complete division
+		//we need to take the modulo to add them to one thread
 		int id = omp_get_thread_num();
-		double x = next_rand(gen[id]);
-		double y = next_rand(gen[id]);
-		if(x*x + y*y <= 1) {
-			#pragma omp atomic
-			sum++;
+		//we add them to the main thread ( where the id is 0)
+		if(id == 0) splitSamples += samples % num_threads;
+		
+		double sumThread = 0;
+		rand_gen genThread = init_rand();
+	    
+		for(int i = 0 ; i < splitSamples; i++){
+			double x = next_rand(genThread);
+			double y = next_rand(genThread);
+			if(x*x + y*y <= 1) {
+				sumThread++;
+			}
 		}
+		#pragma omp atomic
+		sum += sumThread;
 	}
 	
-	pi = 4 * sum / samples;
+	pi = 4.0 * (double)sum / samples;
 
     return pi;
 }
