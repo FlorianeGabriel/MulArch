@@ -1,8 +1,8 @@
 /*
 ============================================================================
 Filename    : algorithm.c
-Author      : Your names go here
-SCIPER      : Your SCIPER numbers
+Author      : Floriane Gabriel & Julien von Felten
+SCIPER      : 248112 & 234865
 
 ============================================================================
 */
