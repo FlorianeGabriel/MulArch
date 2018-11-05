@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "utility.h"
-#include "algorithmFirstTry.c"
+#include "algorithmFirstTryNoIF.c"
 
 int main (int argc, const char *argv[]) {
 
@@ -47,8 +47,7 @@ int main (int argc, const char *argv[]) {
     time = elapsed_time();
     
     //Report time required for n iterations
-    printf("Assignment2FirstTry\n");
-
+    printf("Assignment2FirstTryNoIF\n");
     printf("Running the algorithm with %d threads on %d by %d array for %d iterations took %.4g seconds \n", threads, length, length, iterations, time);
     
     //Save array in filelength
