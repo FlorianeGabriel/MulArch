@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --workdir /home/your_user_name
+#SBATCH --workdir /home/fgabriel
 #SBATCH --partition=gpu
 #SBATCH --qos=gpu_free
 #SBATCH --gres=gpu:1

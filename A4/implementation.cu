@@ -12,6 +12,8 @@ SCIPER      : Your SCIPER number
 #include <cuda_runtime.h>
 using namespace std;
 
+__global__ void GPU_calculation(double*input, double* output, int lenght);
+
 // CPU Baseline
 void array_process(double *input, double *output, int length, int iterations)
 {
@@ -61,16 +63,17 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     /* Preprocessing goes here */
     
-    double* d_input; double *d_output; //moi
+    double* d_input; double *d_output; 
     int length_2 = length*length;
-	cudaMalloc(&d_input, length_2 * sizeof(double)); //moi
-	cudaMalloc(&d_output, length_2 * sizeof(double)); //moi
+	cudaMalloc(&d_input, length_2 * sizeof(double)); 
+	cudaMalloc(&d_output, length_2 * sizeof(double)); 
+	//cudaMalloc(&temp, length_2 * sizeof(double));
 
     cudaEventRecord(cpy_H2D_start);
     /* Copying array from host to device goes here */
-   
-	cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyHostToDevice); //moi
-	cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyHostToDevice); //moi
+    
+	cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyHostToDevice); 
     
     cudaEventRecord(cpy_H2D_end);
     cudaEventSynchronize(cpy_H2D_end);
@@ -79,51 +82,33 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     cudaEventRecord(comp_start);
     /* GPU calculation goes here */
     
-    int x_global = (blockIdx.x * blockDim.x) + threadIdx.x;//moi
-    int y_global = (blockIdx.y * blockDim.y) + threadIdx.y;//moi
-    
     for (int i = 0 ; i < iterations; i ++){
 		
-		if ((x_global == length/2 and y_global == length/2) or
-			(x_global == length/2 - 1 and y_global == length/2) or
-			(x_global == length/2 and y_global == length/2 - 1) or
-			(x_global == length/2 - 1 and y_global == length/2 - 1)) {output[y_global * length + c_global] = 1000;} //moi
-		
-		if (x_global > 0 and x_global < length - 1 and y_global > 0 and y_global < length - 1) {
-			
-			output[(y_global)*(length)+(x_global)] = (input[(y_global-1)*(length)+(x_global-1)] +
-												input[(y_global-1)*(length)+(x_global)]   +
-												input[(y_global-1)*(length)+(x_global+1)] +
-												input[(y_global)*(length)+(x_global-1)]   +
-												input[(y_global)*(length)+(x_global)]     +
-												input[(y_global)*(length)+(x_global+1)]   +
-												input[(y_global+1)*(length)+(x_global-1)] +
-												input[(y_global+1)*(length)+(x_global)]   +
-												input[(y_global+1)*(length)+(x_global+1)] ) / 9;
-		} //moi
+		GPU_calculation<<< length, length >>>(d_input, d_output, length);
 	
 		cudaThreadSynchronize();
-	} //moi
-		
-    
-    
+		double* temp = input;
+		input = output;
+		output = temp; // Est ce que c'est nécessaire ??
+			
+	}
+	
     cudaEventRecord(comp_end);
     cudaEventSynchronize(comp_end);
 
     cudaEventRecord(cpy_D2H_start);
     /* Copying array from device to host goes here */
+    	
+	cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyDeviceToHost);
 		
-	cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyDeviceToHost); //moi
-	cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyDeviceToHost); //moi
-			
     cudaEventRecord(cpy_D2H_end);
     cudaEventSynchronize(cpy_D2H_end);
 
     /* Postprocessing goes here */
     
-    cudaFree(d_input); //moi
-	cudaFree(d_output); //moi
-		
+    cudaFree(d_input); 
+	cudaFree(d_output); 
 
     float time;
     cudaEventElapsedTime(&time, cpy_H2D_start, cpy_H2D_end);
@@ -134,4 +119,33 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 
     cudaEventElapsedTime(&time, cpy_D2H_start, cpy_D2H_end);
     cout<<"Device to Host MemCpy takes "<<setprecision(4)<<time/1000<<"s"<<endl;
+}
+
+__global__ void GPU_calculation(double* input, double* output, int length)
+{
+	int x_global = (blockIdx.x * blockDim.x) + threadIdx.x;
+    int y_global = (blockIdx.y * blockDim.y) + threadIdx.y;
+		
+	output[(y_global)*(length)+(x_global)] = (input[(y_global-1)*(length)+(x_global-1)] +
+												input[(y_global-1)*(length)+(x_global)]   +
+												input[(y_global-1)*(length)+(x_global+1)] +
+												input[(y_global)*(length)+(x_global-1)]   +
+												input[(y_global)*(length)+(x_global)]     +
+												input[(y_global)*(length)+(x_global+1)]   +
+												input[(y_global+1)*(length)+(x_global-1)] +
+												input[(y_global+1)*(length)+(x_global)]   +
+												input[(y_global+1)*(length)+(x_global+1)] ) / 9;
+	
+		
+		/* center of the grid*/
+        output[(length/2-1)*length+(length/2-1)] = 1000;
+        output[(length/2)*length+(length/2-1)]   = 1000;
+        output[(length/2-1)*length+(length/2)]   = 1000;
+        output[(length/2)*length+(length/2)]     = 1000;
+        
+        /* border of the grid*/
+        if(x_global == 0 or y_global == 0 or x_global == length - 1 or y_global == length - 1){
+			output[(y_global)*(length)+(x_global)] = 0;
+		}	
+		
 }
