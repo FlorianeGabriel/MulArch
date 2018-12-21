@@ -158,7 +158,7 @@ __global__ void GPU_calculation(double* input, double* output, int length)
         /* border of the grid*/
         for(int n = 0 ; n < length; n++){
 			output[n] = 0; //first row : y_global = 0
-			output[(length-1)*length + n)] = 0; //last row : y_global = length - 1
+			output[(length-1)*length + n] = 0; //last row : y_global = length - 1
 			output[n*length] = 0; //first column : x_global = 0
 			output[n*length + (length-1)] = 0; // last row : x_global = length - 1
 		}
