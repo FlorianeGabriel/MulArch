@@ -65,15 +65,23 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     
     double* d_input; double *d_output; 
     int length_2 = length*length;
-	cudaMalloc(&d_input, length_2 * sizeof(double)); 
-	cudaMalloc(&d_output, length_2 * sizeof(double)); 
-	//cudaMalloc(&temp, length_2 * sizeof(double));
-
+    
+	if(cudaMalloc(&d_input, length_2 * sizeof(double)) != cudaSuccess){
+		cout<<"error in cudaMalloc"<<endl;
+	} 
+	if(cudaMalloc(&d_output, length_2 * sizeof(double)) != cudaSuccess){
+		cout<<"error in cudaMalloc"<<endl;
+	} 
+	
     cudaEventRecord(cpy_H2D_start);
     /* Copying array from host to device goes here */
     
-	cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyHostToDevice);
-	cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyHostToDevice); 
+	if(cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyHostToDevice) != cudaSuccess){
+		cout<<"error in cudaMemcpy H2D"<<endl;
+	}
+	if(cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyHostToDevice) != cudaSuccess){
+		cout<<"error in cudaMemcpy H2D"<<endl;
+	} 
     
     cudaEventRecord(cpy_H2D_end);
     cudaEventSynchronize(cpy_H2D_end);
@@ -84,12 +92,12 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     
     for (int i = 0 ; i < iterations; i ++){
 		
-		GPU_calculation<<< length, length >>>(d_input, d_output, length);
+		GPU_calculation<<<length, length>>>(d_input, d_output, length);
 	
 		cudaThreadSynchronize();
-		double* temp = input;
-		input = output;
-		output = temp; // Est ce que c'est nécessaire ??
+		double* temp = d_input;
+		d_input = d_output;
+		d_output = temp; // Est ce que c'est nécessaire ??
 			
 	}
 	
@@ -99,8 +107,12 @@ void GPU_array_process(double *input, double *output, int length, int iterations
     cudaEventRecord(cpy_D2H_start);
     /* Copying array from device to host goes here */
     	
-	cudaMemcpy(d_input, input, length_2 * sizeof(double), cudaMemcpyDeviceToHost);
-	cudaMemcpy(d_output, output, length_2 * sizeof(double), cudaMemcpyDeviceToHost);
+	if(cudaMemcpy(input, d_input, length_2 * sizeof(double), cudaMemcpyDeviceToHost) != cudaSuccess){
+		cout<<"error in cudaMemcpy D2H"<<endl;
+	}
+	if (cudaMemcpy(output, d_output, length_2 * sizeof(double), cudaMemcpyDeviceToHost) != cudaSuccess){
+		cout<<"error in cudaMemcpy D2H"<<endl;
+	}
 		
     cudaEventRecord(cpy_D2H_end);
     cudaEventSynchronize(cpy_D2H_end);
