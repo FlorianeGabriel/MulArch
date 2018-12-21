@@ -1,8 +1,8 @@
 /*
 ============================================================================
 Filename    : algorithm.c
-Author      : Your name goes here
-SCIPER      : Your SCIPER number
+Author      : Floriane Gabriel & Julien von Felten
+SCIPER      : 248112 & 234865
 ============================================================================
 */
 
@@ -94,10 +94,9 @@ void GPU_array_process(double *input, double *output, int length, int iterations
 		
 		GPU_calculation<<<length, length>>>(d_input, d_output, length);
 	
-		cudaThreadSynchronize();
 		double* temp = d_input;
 		d_input = d_output;
-		d_output = temp; // Est ce que c'est nécessaire ??
+		d_output = temp; 
 			
 	}
 	
@@ -156,15 +155,15 @@ __global__ void GPU_calculation(double* input, double* output, int length)
         output[(length/2)*length+(length/2)]     = 1000;
         
         /* border of the grid*/
-        for(int n = 0 ; n < length; n++){
+        /*for(int n = 0 ; n < length; n++){
 			output[n] = 0; //first row : y_global = 0
 			output[(length-1)*length + n] = 0; //last row : y_global = length - 1
 			output[n*length] = 0; //first column : x_global = 0
 			output[n*length + (length-1)] = 0; // last row : x_global = length - 1
-		}
+		}*/
         
-        /*if(x_global == 0 or y_global == 0 or x_global == length - 1 or y_global == length - 1){
+        if(x_global == 0 or y_global == 0 or x_global == length - 1 or y_global == length - 1){
 			output[(y_global)*(length)+(x_global)] = 0;
-		}	*/
+		}	
 		
 }
